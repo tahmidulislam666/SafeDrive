@@ -44,10 +44,11 @@ are not installed on the host computer.
 
 1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 2. Start Docker Desktop and wait for its engine to show as running.
-3. Open PowerShell in the project directory:
+3. Open PowerShell in the project directory. Replace the example path with
+   the folder where you saved SafeDrive:
 
 ```powershell
-cd D:\SafeDrive
+cd "C:\path\to\SafeDrive"
 ```
 
 Verify that Docker is ready before continuing:
