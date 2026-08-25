@@ -151,6 +151,7 @@
         <div class="note-panel">
             <h3 style="font-size: 15px; color: #fff;"><i class="fa-solid fa-file-pen"></i> Quick Note / Text</h3>
             <textarea id="noteInput" placeholder="Write your note or paste content here..."></textarea>
+            <label class="public-toggle private-only"><input type="checkbox" id="publicNoteToggle"> Make this note public</label>
             <button id="saveNoteBtn"><i class="fa-solid fa-cloud-arrow-up"></i> Save to Cloud</button>
         </div>
     </div>
@@ -431,7 +432,7 @@
         if (!authToken) return showLogin();
         const note = document.getElementById('noteInput').value.trim(); if(!note) return Swal.fire({ icon:'warning', text:'Please write something', background:'#161b22', color:'#fff' });
         const blob = new Blob([note], { type: 'text/plain' });
-        const form = new FormData(); form.append('isPublic', document.getElementById('publicUploadToggle').checked ? 'true' : 'false'); form.append('files', blob, `note_${Date.now()}.txt`);
+        const form = new FormData(); form.append('isPublic', document.getElementById('publicNoteToggle').checked ? 'true' : 'false'); form.append('files', blob, `note_${Date.now()}.txt`);
         try{
             const res = await authorizedFetch('/upload', { method:'POST', body: form });
             if(res.ok){ Toast.fire({ icon:'success', title:'Note saved' }); document.getElementById('noteInput').value=''; fetchFiles(); }
