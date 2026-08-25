@@ -27,14 +27,14 @@
         .auth-register, .logout-btn { background: transparent; color: var(--text); }
         .logout-btn { font-size: 12px; margin-top: 12px; padding: 7px 10px; }
         .login-btn { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-weight: 600; margin-top: 12px; }
-        body.authenticated .login-btn, body:not(.authenticated) .logout-btn, body:not(.authenticated) .private-only { display: none; }
+        body.authenticated .login-btn, body:not(.authenticated) .logout-btn, body:not(.authenticated) .private-only, body:not(.authenticated) .storage-card { display: none; }
         .public-toggle { color: #8b949e; font-size: 12px; margin-top: 12px; display: inline-flex; align-items: center; gap: 7px; cursor: pointer; }
         
         .brand { text-align: center; margin-bottom: 35px; }
         .brand h1 { font-size: 30px; color: #fff; display: flex; align-items: center; justify-content: center; gap: 12px; }
         .brand p { color: #8b949e; font-size: 14px; margin-top: 5px; }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; }
         .stat-card { background: var(--panel); padding: 18px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
         .stat-card i { color: var(--accent); margin-bottom: 8px; font-size: 18px; }
         .stat-card h3 { font-size: 20px; color: #fff; }
@@ -127,8 +127,6 @@
 
     <div class="stats-grid">
         <div class="stat-card"><i class="fa-solid fa-database"></i><h3 id="totalCount">0</h3><span>Total Files</span></div>
-        <div class="stat-card"><i class="fa-solid fa-image"></i><h3 id="imgCount">0</h3><span>Images</span></div>
-        <div class="stat-card"><i class="fa-solid fa-note-sticky"></i><h3 id="noteCount">0</h3><span>Other Files</span></div>
         <div class="stat-card"><i class="fa-solid fa-hard-drive"></i><h3>Active</h3><span>Local Sync</span></div>
     </div>
 
@@ -157,14 +155,16 @@
         </div>
     </div>
 
-    <div class="explorer-header"><i class="fa-regular fa-folder-open"></i> Root / My_Files / Smart_Local_Sync</div>
+    <div class="explorer-header"><i class="fa-regular fa-folder-open"></i> <span id="explorerPath">Root / My Files</span></div>
     <div class="file-tools">
         <input class="search-box" id="searchInput" type="search" placeholder="Search files by name..." aria-label="Search files by name">
-        <div class="filter-group" aria-label="Filter files by type">
-            <button class="filter-btn active" type="button" data-filter="all">All</button>
-            <button class="filter-btn" type="button" data-filter="images">Images</button>
-            <button class="filter-btn" type="button" data-filter="notes">Notes</button>
-            <button class="filter-btn" type="button" data-filter="documents">Documents</button>
+        <div class="filter-group" aria-label="Choose file list and filter by type">
+            <button class="filter-btn scope-btn private-only active" type="button" data-scope="mine">My Files</button>
+            <button class="filter-btn scope-btn" type="button" data-scope="public">Public Files</button>
+            <button class="filter-btn type-btn active" type="button" data-filter="all">All types</button>
+            <button class="filter-btn type-btn" type="button" data-filter="images">Images</button>
+            <button class="filter-btn type-btn" type="button" data-filter="notes">Notes</button>
+            <button class="filter-btn type-btn" type="button" data-filter="documents">Documents</button>
         </div>
         <select class="sort-select" id="sortSelect" aria-label="Sort files">
             <option value="date">Date (newest)</option>
@@ -182,6 +182,7 @@
     let allFiles = [];
     let publicFiles = [];
     let privateFiles = [];
+    let activeScope = authToken ? 'mine' : 'public';
     let activeFilter = 'all';
     let storageInfo = { maxFilesPerUpload: 10 };
 
@@ -196,9 +197,11 @@
     function signOut() {
         const wasAuthenticated = Boolean(authToken);
         authToken = null;
+        activeScope = 'public';
         localStorage.removeItem('safeDriveToken');
         document.body.classList.remove('authenticated', 'authenticating');
         document.getElementById('passwordInput').value = '';
+        updateFileControls();
         if (wasAuthenticated) fetchFiles();
     }
 
@@ -220,9 +223,11 @@
             const data = await response.json();
             if (!response.ok) return Swal.fire({ icon: 'error', title: 'Authentication failed', text: data.error || '', background:'#161b22', color:'#fff' });
             authToken = data.token;
+            activeScope = 'mine';
             localStorage.setItem('safeDriveToken', authToken);
             document.body.classList.remove('authenticating');
             document.body.classList.add('authenticated');
+            updateFileControls();
             fetchFiles();
         } catch (error) {
             Swal.fire({ icon: 'error', title: 'Authentication failed', text: 'Unable to reach the server', background:'#161b22', color:'#fff' });
@@ -270,16 +275,24 @@
     }
 
     function updateStats(files) {
-        const images = files.filter(file => getFileType(file) === 'images').length;
         document.getElementById('totalCount').innerText = files.length;
-        document.getElementById('imgCount').innerText = images;
-        document.getElementById('noteCount').innerText = files.length - images;
+    }
+
+    function isMyFile(file) {
+        return !file.isPublic || file.canDelete;
+    }
+
+    function updateFileControls() {
+        document.querySelectorAll('.scope-btn').forEach(button => button.classList.toggle('active', button.dataset.scope === activeScope));
+        document.querySelectorAll('.type-btn').forEach(button => button.classList.toggle('active', button.dataset.filter === activeFilter));
+        document.getElementById('explorerPath').innerText = activeScope === 'mine' ? 'Root / My Files' : 'Root / Public Files';
     }
 
     function applyFilters() {
         const query = document.getElementById('searchInput').value.trim().toLocaleLowerCase();
         const sort = document.getElementById('sortSelect').value;
         const visibleFiles = allFiles
+            .filter(file => activeScope === 'mine' ? isMyFile(file) : file.isPublic)
             .filter(file => activeFilter === 'all' || getFileType(file) === activeFilter)
             .filter(file => file.originalname.toLocaleLowerCase().includes(query))
             .sort((a, b) => {
@@ -332,17 +345,25 @@
             }
             allFiles = [...publicFiles, ...privateFiles];
             await loadImagePreviews(allFiles);
-            updateStats(allFiles);
+            updateStats(authToken ? allFiles.filter(isMyFile) : publicFiles);
+            updateFileControls();
             applyFilters();
         } catch(e) { console.error(e); }
     }
 
     document.getElementById('searchInput').addEventListener('input', applyFilters);
     document.getElementById('sortSelect').addEventListener('change', applyFilters);
-    document.querySelectorAll('.filter-btn').forEach(button => {
+    document.querySelectorAll('.scope-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            activeScope = button.dataset.scope;
+            updateFileControls();
+            applyFilters();
+        });
+    });
+    document.querySelectorAll('.type-btn').forEach(button => {
         button.addEventListener('click', () => {
             activeFilter = button.dataset.filter;
-            document.querySelectorAll('.filter-btn').forEach(item => item.classList.toggle('active', item === button));
+            updateFileControls();
             applyFilters();
         });
     });
@@ -441,6 +462,7 @@
     if (authToken) {
         document.body.classList.add('authenticated');
     }
+    updateFileControls();
     fetchFiles();
     </script>
 
