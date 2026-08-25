@@ -1,7 +1,7 @@
 {
-  "name": "todo-list-drive-server",
+  "name": "safedrive-server",
   "version": "1.0.0",
-  "description": "Simple file upload server for ToDO-LiST-Drive",
+  "description": "Simple file upload server for SafeDrive",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

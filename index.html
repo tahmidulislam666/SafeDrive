@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ToDO-List-Drive | Super Sync</title>
+    <title>SafeDrive | Super Sync</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -12,6 +12,23 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background-color: var(--bg); color: var(--text); padding: 40px 20px; min-height: 100vh; }
         .wrapper { max-width: 900px; margin: 0 auto; }
+        .auth-screen { min-height: calc(100vh - 80px); display: none; place-items: center; }
+        body.authenticating .auth-screen { display: grid; }
+        body.authenticating .wrapper { display: none; }
+        .auth-card { width: min(100%, 390px); background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 28px; }
+        .auth-card h2 { color: #fff; font-size: 22px; margin-bottom: 8px; }
+        .auth-card p { color: #8b949e; font-size: 13px; margin-bottom: 20px; }
+        .auth-card label { display: block; color: #c9d1d9; font-size: 12px; margin: 12px 0 6px; }
+        .auth-card input { width: 100%; background: #0d1117; color: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 11px; outline: none; }
+        .auth-card input:focus { border-color: var(--accent); }
+        .auth-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+        .auth-actions button, .logout-btn { border: 1px solid var(--border); border-radius: 8px; padding: 10px; cursor: pointer; font-weight: 600; }
+        .auth-submit { background: var(--accent); color: #fff; border-color: var(--accent) !important; }
+        .auth-register, .logout-btn { background: transparent; color: var(--text); }
+        .logout-btn { font-size: 12px; margin-top: 12px; padding: 7px 10px; }
+        .login-btn { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-weight: 600; margin-top: 12px; }
+        body.authenticated .login-btn, body:not(.authenticated) .logout-btn, body:not(.authenticated) .private-only { display: none; }
+        .public-toggle { color: #8b949e; font-size: 12px; margin-top: 12px; display: inline-flex; align-items: center; gap: 7px; cursor: pointer; }
         
         .brand { text-align: center; margin-bottom: 35px; }
         .brand h1 { font-size: 30px; color: #fff; display: flex; align-items: center; justify-content: center; gap: 12px; }
@@ -22,6 +39,12 @@
         .stat-card i { color: var(--accent); margin-bottom: 8px; font-size: 18px; }
         .stat-card h3 { font-size: 20px; color: #fff; }
         .stat-card span { font-size: 10px; color: #8b949e; display: block; }
+        .storage-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px 18px; margin-bottom: 25px; }
+        .storage-heading { display: flex; justify-content: space-between; gap: 12px; color: #fff; font-size: 13px; margin-bottom: 10px; }
+        .storage-heading span { color: #8b949e; font-size: 12px; }
+        .storage-bar { height: 8px; background: #0d1117; border-radius: 8px; overflow: hidden; }
+        .storage-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.3s ease; }
+        .storage-limit { color: #8b949e; display: block; font-size: 11px; margin-top: 8px; }
 
         .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
 
@@ -38,6 +61,13 @@
         .progress-fill { width: 0%; height: 100%; background: var(--accent); transition: 0.4s ease; }
 
         .explorer-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; color: #8b949e; font-size: 14px; }
+        .file-tools { display: grid; grid-template-columns: minmax(180px, 1fr) auto auto; gap: 10px; margin-bottom: 15px; }
+        .search-box, .sort-select { background: #0d1117; color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; outline: none; }
+        .search-box:focus, .sort-select:focus { border-color: var(--accent); }
+        .filter-group { display: flex; gap: 6px; flex-wrap: wrap; }
+        .filter-btn { background: #1c2128; color: #8b949e; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; cursor: pointer; font-size: 12px; }
+        .filter-btn.active, .filter-btn:hover { border-color: var(--accent); color: #fff; }
+        .filter-btn.active { background: rgba(88, 166, 255, 0.15); }
         .asset-list { list-style: none; display: grid; grid-template-columns: 1fr; gap: 10px; }
         .asset-item { background: #1c2128; padding: 15px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); transition: 0.2s; }
         .asset-item:hover { background: #22272e; border-color: #444c56; }
@@ -54,6 +84,14 @@
         .dl-btn { color: var(--accent); opacity: 0.8; }
         .del-btn { color: #f85149; opacity: 0.6; }
         .action-btn:hover { opacity: 1; transform: scale(1.15); }
+        .empty-state { color: #8b949e; text-align: center; padding: 28px; border: 1px dashed var(--border); border-radius: 12px; }
+        .preview-btn { color: #d2a8ff; opacity: 0.65; }
+        .asset-item:hover .preview-btn, .preview-btn:focus { opacity: 1; }
+
+        @media (max-width: 650px) {
+            .stats-grid, .main-grid { grid-template-columns: 1fr 1fr; }
+            .file-tools { grid-template-columns: 1fr; }
+        }
 
         /* Loading Spinner */
         .swal2-loader { border-color: var(--accent) transparent var(--accent) transparent !important; }
@@ -63,25 +101,50 @@
 </head>
 <body>
 
+<main class="auth-screen" id="authScreen">
+    <form class="auth-card" id="authForm">
+        <h2><i class="fa-solid fa-shield-halved"></i> SafeDrive</h2>
+        <p>Sign in to access your private file storage.</p>
+        <label for="usernameInput">Username</label>
+        <input id="usernameInput" name="username" autocomplete="username" minlength="3" maxlength="32" required>
+        <label for="passwordInput">Password</label>
+        <input id="passwordInput" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="128" required>
+        <div class="auth-actions">
+            <button class="auth-submit" type="submit">Sign in</button>
+            <button class="auth-register" id="registerBtn" type="button">Create account</button>
+            <button class="auth-register" id="guestBtn" type="button">Public files</button>
+        </div>
+    </form>
+</main>
+
 <div class="wrapper">
     <div class="brand">
-        <h1><i class="fa-solid fa-cloud-bolt"></i> ToDO-List-Drive</h1>
+        <h1><i class="fa-solid fa-cloud-bolt"></i> SafeDrive</h1>
         <p>Your Personal Cloud Hub • Intelligent Hybrid Sync Enabled</p>
+        <button class="login-btn" id="loginBtn" type="button">Sign in for private storage</button>
+        <button class="logout-btn" id="logoutBtn" type="button">Sign out</button>
     </div>
 
     <div class="stats-grid">
         <div class="stat-card"><i class="fa-solid fa-database"></i><h3 id="totalCount">0</h3><span>Total Files</span></div>
         <div class="stat-card"><i class="fa-solid fa-image"></i><h3 id="imgCount">0</h3><span>Images</span></div>
-        <div class="stat-card"><i class="fa-solid fa-note-sticky"></i><h3 id="noteCount">0</h3><span>Notes</span></div>
+        <div class="stat-card"><i class="fa-solid fa-note-sticky"></i><h3 id="noteCount">0</h3><span>Other Files</span></div>
         <div class="stat-card"><i class="fa-solid fa-hard-drive"></i><h3>Active</h3><span>Local Sync</span></div>
     </div>
 
+    <section class="storage-card" aria-label="Storage usage">
+        <div class="storage-heading"><strong><i class="fa-solid fa-hard-drive"></i> Storage usage</strong><span id="storageText">Loading...</span></div>
+        <div class="storage-bar" role="progressbar" aria-label="Storage used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="storage-fill" id="storageFill"></div></div>
+        <small class="storage-limit" id="fileLimitText">No per-file size limit</small>
+    </section>
+
     <div class="main-grid">
-        <div class="upload-panel" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-panel" onclick="startUpload()">
             <i class="fa-solid fa-circle-arrow-up"></i>
-            <h3>Upload Image</h3>
-            <p style="font-size: 12px; color: #8b949e;">Personal Cloud Storage</p>
-            <input type="file" id="fileInput" accept="image/*">
+            <h3>Upload File</h3>
+            <p style="font-size: 12px; color: #8b949e;">Upload any file to your personal cloud</p>
+            <input type="file" id="fileInput" multiple>
+            <label class="public-toggle private-only" onclick="event.stopPropagation()"><input type="checkbox" id="publicUploadToggle"> Make uploaded files public</label>
             <div class="progress-box" id="progBox">
                 <div class="progress-fill" id="progFill"></div>
             </div>
@@ -95,63 +158,248 @@
     </div>
 
     <div class="explorer-header"><i class="fa-regular fa-folder-open"></i> Root / My_Files / Smart_Local_Sync</div>
+    <div class="file-tools">
+        <input class="search-box" id="searchInput" type="search" placeholder="Search files by name..." aria-label="Search files by name">
+        <div class="filter-group" aria-label="Filter files by type">
+            <button class="filter-btn active" type="button" data-filter="all">All</button>
+            <button class="filter-btn" type="button" data-filter="images">Images</button>
+            <button class="filter-btn" type="button" data-filter="notes">Notes</button>
+            <button class="filter-btn" type="button" data-filter="documents">Documents</button>
+        </div>
+        <select class="sort-select" id="sortSelect" aria-label="Sort files">
+            <option value="date">Date (newest)</option>
+            <option value="name">Name (A–Z)</option>
+            <option value="size">Size (largest)</option>
+        </select>
+    </div>
     <ul class="asset-list" id="assetList"></ul>
 </div>
 
     <script>
     // Simple client that uploads any file to the local server and lists files
     const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2500, background: '#161b22', color: '#fff' });
+    let authToken = localStorage.getItem('safeDriveToken');
+    let allFiles = [];
+    let publicFiles = [];
+    let privateFiles = [];
+    let activeFilter = 'all';
+    let storageInfo = { maxFilesPerUpload: 10 };
+
+    async function authorizedFetch(url, options = {}) {
+        const headers = new Headers(options.headers || {});
+        headers.set('Authorization', `Bearer ${authToken}`);
+        const response = await fetch(url, { ...options, headers });
+        if (response.status === 401) signOut();
+        return response;
+    }
+
+    function signOut() {
+        const wasAuthenticated = Boolean(authToken);
+        authToken = null;
+        localStorage.removeItem('safeDriveToken');
+        document.body.classList.remove('authenticated', 'authenticating');
+        document.getElementById('passwordInput').value = '';
+        if (wasAuthenticated) fetchFiles();
+    }
+
+    function showLogin() {
+        document.body.classList.add('authenticating');
+        document.getElementById('usernameInput').focus();
+    }
+
+    window.startUpload = () => {
+        if (!authToken) return showLogin();
+        document.getElementById('fileInput').click();
+    }
+
+    async function submitAuth(endpoint) {
+        const username = document.getElementById('usernameInput').value.trim();
+        const password = document.getElementById('passwordInput').value;
+        try {
+            const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
+            const data = await response.json();
+            if (!response.ok) return Swal.fire({ icon: 'error', title: 'Authentication failed', text: data.error || '', background:'#161b22', color:'#fff' });
+            authToken = data.token;
+            localStorage.setItem('safeDriveToken', authToken);
+            document.body.classList.remove('authenticating');
+            document.body.classList.add('authenticated');
+            fetchFiles();
+        } catch (error) {
+            Swal.fire({ icon: 'error', title: 'Authentication failed', text: 'Unable to reach the server', background:'#161b22', color:'#fff' });
+        }
+    }
+
+    function formatBytes(bytes) {
+        if (!bytes) return '0 B';
+        const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+        return `${(bytes / (1024 ** index)).toFixed(index ? 1 : 0)} ${units[index]}`;
+    }
+
+    function escapeHtml(value) {
+        return String(value).replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+    }
+
+    async function fetchStorage() {
+        try {
+            const response = await authorizedFetch('/storage');
+            if (!response.ok) return;
+            storageInfo = await response.json();
+            const percentage = Math.min(100, (storageInfo.usedBytes / storageInfo.quotaBytes) * 100);
+            document.getElementById('storageText').innerText = `${formatBytes(storageInfo.usedBytes)} of ${formatBytes(storageInfo.quotaBytes)}`;
+            document.getElementById('storageFill').style.width = `${percentage}%`;
+            document.querySelector('.storage-bar').setAttribute('aria-valuenow', Math.round(percentage));
+            document.getElementById('fileLimitText').innerText = `No per-file size limit • Up to ${storageInfo.maxFilesPerUpload} files per upload`;
+        } catch (error) { console.error(error); }
+    }
+
+    async function loadImagePreviews(files) {
+        allFiles.forEach(file => { if (file.previewUrl) URL.revokeObjectURL(file.previewUrl); });
+        await Promise.all(files.filter(file => file.mimetype.startsWith('image/')).map(async file => {
+            try {
+                const response = await authorizedFetch(file.url);
+                if (response.ok) file.previewUrl = URL.createObjectURL(await response.blob());
+            } catch (error) { console.error(error); }
+        }));
+    }
+
+    function getFileType(file) {
+        if (file.mimetype.startsWith('image/')) return 'images';
+        if (file.mimetype === 'text/plain') return 'notes';
+        return 'documents';
+    }
+
+    function updateStats(files) {
+        const images = files.filter(file => getFileType(file) === 'images').length;
+        document.getElementById('totalCount').innerText = files.length;
+        document.getElementById('imgCount').innerText = images;
+        document.getElementById('noteCount').innerText = files.length - images;
+    }
+
+    function applyFilters() {
+        const query = document.getElementById('searchInput').value.trim().toLocaleLowerCase();
+        const sort = document.getElementById('sortSelect').value;
+        const visibleFiles = allFiles
+            .filter(file => activeFilter === 'all' || getFileType(file) === activeFilter)
+            .filter(file => file.originalname.toLocaleLowerCase().includes(query))
+            .sort((a, b) => {
+                if (sort === 'name') return a.originalname.localeCompare(b.originalname);
+                if (sort === 'size') return b.size - a.size;
+                return b.time - a.time;
+            });
+        renderList(visibleFiles);
+    }
 
     function renderList(files) {
         const list = document.getElementById('assetList');
         list.innerHTML = '';
-        let imgTotal = 0, noteTotal = 0;
-        files.sort((a,b)=>b.time - a.time).forEach(f => {
+        if (!files.length) {
+            list.innerHTML = '<li class="empty-state">No files match your search or filter.</li>';
+            return;
+        }
+        files.forEach(f => {
             const li = document.createElement('li'); li.className='asset-item';
             const isImage = f.mimetype.startsWith('image/');
-            if (isImage) imgTotal++; else noteTotal++;
             li.innerHTML = `
                 <div class="asset-info">
-                    ${isImage ? `<img src="${f.url}" alt="thumb">` : `<i class="fa-solid fa-file-lines"></i>`}
+                    ${isImage && f.previewUrl ? `<img src="${f.previewUrl}" alt="thumb">` : `<i class="fa-solid fa-file-lines"></i>`}
                     <div class="asset-content">
-                        <span>${f.originalname}</span>
+                        <span>${escapeHtml(f.originalname)}</span>
                         <small>${f.mimetype} • ${new Date(f.time).toLocaleString()}</small>
                     </div>
                 </div>
                 <div class="actions">
-                    <a class="action-btn dl-btn" href="${f.url}" download="${f.originalname}" title="Download"><i class="fa-solid fa-circle-down"></i></a>
-                    <button class="action-btn del-btn" onclick="deleteFile('${encodeURIComponent(f.filename)}')" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
+                    <button class="action-btn dl-btn" onclick="downloadFile('${encodeURIComponent(f.filename)}')" title="Download"><i class="fa-solid fa-circle-down"></i></button>
+                    <button class="action-btn preview-btn" onclick="previewFile('${encodeURIComponent(f.filename)}')" title="Preview"><i class="fa-solid fa-eye"></i></button>
+                    ${f.canDelete ? `<button class="action-btn del-btn" onclick="deleteFile('${encodeURIComponent(f.filename)}')" title="Delete"><i class="fa-solid fa-trash-can"></i></button>` : ''}
                 </div>`;
             list.appendChild(li);
         });
-        document.getElementById('totalCount').innerText = imgTotal + noteTotal;
-        document.getElementById('imgCount').innerText = imgTotal;
-        document.getElementById('noteCount').innerText = noteTotal;
     }
 
     async function fetchFiles(){
         try {
-            const res = await fetch('/files');
-            const data = await res.json();
-            renderList(data);
+            const publicResponse = authToken ? await authorizedFetch('/public-files') : await fetch('/public-files');
+            publicFiles = publicResponse.ok ? await publicResponse.json() : [];
+            privateFiles = [];
+            if (authToken) {
+                const privateResponse = await authorizedFetch('/files');
+                if (privateResponse.ok) privateFiles = await privateResponse.json();
+                fetchStorage();
+            } else {
+                document.getElementById('storageText').innerText = 'Sign in to view private storage';
+                document.getElementById('storageFill').style.width = '0%';
+            }
+            allFiles = [...publicFiles, ...privateFiles];
+            await loadImagePreviews(allFiles);
+            updateStats(allFiles);
+            applyFilters();
         } catch(e) { console.error(e); }
     }
 
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    document.getElementById('sortSelect').addEventListener('change', applyFilters);
+    document.querySelectorAll('.filter-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            activeFilter = button.dataset.filter;
+            document.querySelectorAll('.filter-btn').forEach(item => item.classList.toggle('active', item === button));
+            applyFilters();
+        });
+    });
+
+    window.previewFile = async (encodedName) => {
+        const file = allFiles.find(item => item.filename === decodeURIComponent(encodedName));
+        if (!file) return;
+        if (getFileType(file) === 'images') {
+            return Swal.fire({ title: file.originalname, imageUrl: file.previewUrl, imageAlt: file.originalname, background:'#161b22', color:'#fff' });
+        }
+        if (getFileType(file) === 'notes') {
+            try {
+                const text = await (await authorizedFetch(file.url)).text();
+                return Swal.fire({ title: file.originalname, text: text.slice(0, 10000) || '(Empty note)', background:'#161b22', color:'#fff', width: 700 });
+            } catch (error) { console.error(error); }
+        }
+        Swal.fire({ title: file.originalname, text: `${formatBytes(file.size)} • ${file.mimetype}\nPreview is not available for this file type. Download it to open it.`, background:'#161b22', color:'#fff' });
+    };
+
+    window.downloadFile = async (encodedName) => {
+        const file = allFiles.find(item => item.filename === decodeURIComponent(encodedName));
+        if (!file) return;
+        try {
+            const response = await authorizedFetch(file.url);
+            if (!response.ok) throw new Error('Download failed');
+            const url = URL.createObjectURL(await response.blob());
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = file.originalname;
+            link.click();
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            Swal.fire({ icon:'error', title:'Download failed', background:'#161b22', color:'#fff' });
+        }
+    };
+
     document.getElementById('fileInput').addEventListener('change', (e)=>{
-        const file = e.target.files[0]; if(!file) return;
+        const files = Array.from(e.target.files); if(!files.length) return;
+        if (files.length > storageInfo.maxFilesPerUpload) return Swal.fire({ icon:'warning', text:`Select up to ${storageInfo.maxFilesPerUpload} files at a time`, background:'#161b22', color:'#fff' });
         const progBox = document.getElementById('progBox');
         const progFill = document.getElementById('progFill');
         progBox.style.display = 'block'; progFill.style.width = '4%';
 
         const xhr = new XMLHttpRequest();
-        const form = new FormData(); form.append('file', file);
+        const form = new FormData(); form.append('isPublic', document.getElementById('publicUploadToggle').checked ? 'true' : 'false'); files.forEach(file => form.append('files', file));
         xhr.open('POST', '/upload');
+        xhr.setRequestHeader('Authorization', `Bearer ${authToken}`);
         xhr.upload.onprogress = (evt)=>{
             if(evt.lengthComputable){ const pct = Math.round((evt.loaded/evt.total)*100); progFill.style.width = pct + '%'; }
         };
         xhr.onload = () => {
-            if(xhr.status===200){ Toast.fire({ icon: 'success', title: 'Uploaded' }); fetchFiles(); }
-            else Swal.fire({ icon:'error', title: 'Upload failed', background:'#161b22', color:'#fff' });
+            if(xhr.status===200){ Toast.fire({ icon: 'success', title: `${files.length} file${files.length === 1 ? '' : 's'} uploaded` }); fetchFiles(); }
+            else {
+                let error = '';
+                try { error = JSON.parse(xhr.responseText || '{}').error || ''; } catch { error = ''; }
+                Swal.fire({ icon:'error', title: 'Upload failed', text: error, background:'#161b22', color:'#fff' });
+            }
             setTimeout(()=>{ progBox.style.display='none'; progFill.style.width='0%'; document.getElementById('fileInput').value=''; }, 800);
         };
         xhr.onerror = ()=>{ Swal.fire({ icon:'error', title:'Network error', background:'#161b22', color:'#fff' }); progBox.style.display='none'; };
@@ -159,26 +407,40 @@
     });
 
     document.getElementById('saveNoteBtn').addEventListener('click', async ()=>{
+        if (!authToken) return showLogin();
         const note = document.getElementById('noteInput').value.trim(); if(!note) return Swal.fire({ icon:'warning', text:'Please write something', background:'#161b22', color:'#fff' });
         const blob = new Blob([note], { type: 'text/plain' });
-        const form = new FormData(); form.append('file', blob, `note_${Date.now()}.txt`);
+        const form = new FormData(); form.append('isPublic', document.getElementById('publicUploadToggle').checked ? 'true' : 'false'); form.append('files', blob, `note_${Date.now()}.txt`);
         try{
-            const res = await fetch('/upload', { method:'POST', body: form });
+            const res = await authorizedFetch('/upload', { method:'POST', body: form });
             if(res.ok){ Toast.fire({ icon:'success', title:'Note saved' }); document.getElementById('noteInput').value=''; fetchFiles(); }
         }catch(e){ Swal.fire({ icon:'error', title:'Save failed', background:'#161b22', color:'#fff' }); }
     });
 
     window.deleteFile = async (encodedName) => {
-        const name = decodeURIComponent(encodedName);
+        const file = allFiles.find(item => item.filename === decodeURIComponent(encodedName));
+        if (!file?.canDelete) return;
         const resp = await Swal.fire({ title:'Delete file?', showCancelButton:true, background:'#161b22', color:'#fff' });
         if(resp.isConfirmed){
-            const res = await fetch('/files/' + encodeURIComponent(name), { method: 'DELETE' });
+            const res = await authorizedFetch(file.deleteUrl, { method: 'DELETE' });
             if(res.ok){ Toast.fire({ icon:'success', title:'Deleted' }); fetchFiles(); }
             else Swal.fire({ icon:'error', title:'Delete failed', background:'#161b22', color:'#fff' });
         }
     };
 
+    document.getElementById('authForm').addEventListener('submit', event => {
+        event.preventDefault();
+        submitAuth('/auth/login');
+    });
+    document.getElementById('registerBtn').addEventListener('click', () => submitAuth('/auth/register'));
+    document.getElementById('guestBtn').addEventListener('click', () => document.body.classList.remove('authenticating'));
+    document.getElementById('loginBtn').addEventListener('click', showLogin);
+    document.getElementById('logoutBtn').addEventListener('click', signOut);
+
     // Initial load
+    if (authToken) {
+        document.body.classList.add('authenticated');
+    }
     fetchFiles();
     </script>
 
